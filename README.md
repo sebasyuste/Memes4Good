@@ -14,6 +14,14 @@ Version 3 (v3) introduces a more interaction-aware fusion strategy to better cap
 
 ---
 
+## Model & Dataset Access
+Due to file size limits, the model weights and the meme dataset are hosted on Hugging Face:
+* **Model Weights (v3):** https://huggingface.co/sebasyuste/MEMES4GOOD-MODEL
+* **Meme Dataset:** https://huggingface.co/sebasyuste/MEMES4GOOD-DATA
+* **Live Demo:** https://huggingface.co/sebasyuste/MEMES4GOOD-DEMO
+
+---
+
 ## Why a Multimodal Approach?
 Memes rarely communicate meaning through a single modality:
 
