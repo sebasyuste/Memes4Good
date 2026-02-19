@@ -1,156 +1,136 @@
-# Memes4Good (v3)
-**Multimodal Hate Speech Detection for Spanish Memes**
+# Memes4Good: Multimodal Meme Classification
 
-**Memes4Good v3** is an experimental AI system for detecting hate speech and offensive content in **Spanish-language memes**.  
-It uses a **late-fusion multimodal architecture** that combines visual, textual, and OCR-based context, achieving **~78.8% accuracy** and **~85% AUC** on a culturally diverse Spanish meme dataset.
+## Project Description
 
----
+Memes4Good is a project focused on classifying Spanish memes using a multimodal approach. Since memes combine image and text to create meaning, the system processes both at the same time.
 
-## Project Overview
-Memes4Good is an academic research project focused on **multimodal content moderation**.  
-Unlike traditional text-only approaches, this system addresses the fact that memes often convey meaning through the **interaction between image and text**, frequently involving irony, sarcasm, or cultural references.
-
-Version 3 (v3) introduces a more interaction-aware fusion strategy to better capture implicit and contextual hate speech in Spanish memes.
+The main goal is to explore how different architectural choices affect performance and generalization with a limited dataset.
 
 ---
 
-## Model & Dataset Access
-Due to file size limits, the model weights and the meme dataset are hosted on Hugging Face:
-* **Model Weights (v3):** https://huggingface.co/sebasyuste/MEMES4GOOD-MODEL
-* **Meme Dataset:** https://huggingface.co/sebasyuste/MEMES4GOOD-DATA
-* **Live Demo:** https://huggingface.co/sebasyuste/MEMES4GOOD-DEMO
+## Model Versions
+
+The project includes three model versions, each with a different level of complexity.
+
+### ROBUST
+
+**Architecture:** Uses frozen EfficientNetB0 and BETO (Spanish BERT). Most layers are not trained, which keeps the model simpler.
+
+**Parameters:** 64-unit projection layers and a high dropout rate (0.7).
+
+**Input:** MAX_LEN = 64.
+
+**Performance:** This version performs well with the current dataset because its limited capacity helps reduce overfitting.
 
 ---
 
-## Why a Multimodal Approach?
-Memes rarely communicate meaning through a single modality:
+### BALANCED
 
-- A neutral image can become offensive depending on the caption  
-- A harmless text can turn hateful depending on the image  
-- Irony often appears when text and image contradict each other  
+**Architecture:** Light fine-tuning. The last 15 CNN layers and the final BERT layer are trainable.
 
-For this reason, **unimodal models are fundamentally limited**.  
-A multimodal approach is necessary to properly understand meme semantics.
+**Parameters:** 192-unit projection layers with dropout between 0.45 and 0.55.
 
----
+**Input:** MAX_LEN = 128.
 
-## Architecture Design
-### Why Late Fusion?
-
-Memes4Good v3 uses a **late-fusion architecture**, where each modality is processed independently before being combined at a high semantic level.
-
-This design was chosen for the following reasons:
-
-1. **Modality Independence**  
-   Visual and textual data have very different structures. Late fusion allows each model to learn strong, specialized representations.
-
-2. **Reduced Noise Propagation**  
-   Early fusion can amplify OCR errors or irrelevant visual features. Late fusion combines abstract features, reducing this risk.
-
-3. **Better Handling of Irony and Context**  
-   Irony usually emerges only after each modality is understood separately. Late fusion enables reasoning over cross-modal relationships.
-
-For these reasons, late fusion is a robust and practical choice for meme moderation.
+**Performance:** Provides stable results and a good balance between flexibility and regularization.
 
 ---
 
-## Multimodal Pipeline
+### POWERFUL
 
-### Visual Branch — *EfficientNetB0*
-- Pre-trained on ImageNet  
-- Efficient and lightweight  
-- Captures hierarchical visual patterns (faces, gestures, symbols)  
-- Suitable for scalable or real-world deployment  
+**Architecture:** More layers are trainable (18 CNN layers and 2 BERT layers).
 
----
+**Complexity:** Uses three BERT outputs (pooler output, CLS token, and mean pooling) combined with 256-unit projection layers.
 
-### Textual Branch — *BETO (bert-base-spanish-wwm-cased)*
-- Spanish-specific BERT model  
-- Better handling of slang and informal language  
-- More accurate representation of regional Spanish variations  
+**Input:** MAX_LEN = 128.
 
-Multilingual BERT models often miss these nuances.
+**Status:** This version is more scalable in theory. However, with the current dataset size, it tends to overfit and does not generalize well.
 
 ---
 
-### OCR & Visual Context — *Qwen2-VL (2B-Instruct)*
-Qwen2-VL is used to:
-- Perform advanced OCR on meme images  
-- Generate a **semantic description of the visual scene**
+## Multimodal Architecture Overview
 
-This visual context helps the classifier understand *what is happening in the image*, not just what text is present.
+All models follow the same general process:
 
-> Qwen2-VL is used only as a context-generation module and is not fine-tuned during training.
+1. **Image Branch**  
+   EfficientNetB0 extracts visual features from the meme image.
 
----
+2. **Text Branch**  
+   BETO (Spanish BERT) processes the meme text to extract contextual meaning.
 
-## Fusion Mechanism (v3)
-Instead of simple concatenation, version 3 introduces an **interaction-aware fusion strategy**:
+3. **Feature Combination**  
+   - ROBUST: simple concatenation of image and text features.  
+   - BALANCED & POWERFUL: combine features using sum, difference, and element-wise product to capture relationships between image and text (useful when they contradict each other).
 
-1. Element-wise **Multiply** between visual and textual feature vectors  
-2. Followed by **Concatenation**  
-3. Final classification using a dense layer  
-
-This forces the model to focus on **cross-modal agreement or conflict**, which is critical for detecting implicit hate and sarcasm.
+4. **Final Classification**  
+   A dense layer with sigmoid activation outputs a probability between 0 (Harmful) and 1 (Harmless).
 
 ---
 
-## Dataset Construction
-Due to the lack of large Spanish meme datasets, multiple sources were combined to build a dataset of approximately **6,750 samples**:
+## Dataset Information
 
-- **DIMEMEX (IberLEF)** — Mexican Spanish memes  
-- **Chilean Memes Dataset** — Regional and linguistic diversity  
-- **Custom Dataset (~3,000 samples)**  
-  - Scraped from public social media  
-  - Includes recent slang and internet-specific language  
+The dataset contains approximately 6,750 Spanish memes.
 
-### Dataset Limitations
-- **Label subjectivity**: Hate speech is often ambiguous  
-- **Cultural bias**: Meaning depends on local context  
-- **Label noise**: Introduces a natural performance ceiling  
+Sources:
 
----
+- **Dimemex** (Mexican memes)  
+- **Chilean Memes**  
+- **Telegram scraping** (~3,000 memes from a specific offensive meme group)
 
-## Training and Results
+Important details:
 
-- **Epochs:** 30  
-- **Learning Rate:** 1e-5  
-- **Loss Function:** Binary Cross-Entropy  
-- **Techniques:** Class weighting and label smoothing  
+- The dataset comes from only three sources.  
+- The Telegram data was collected from a single group, so it does not represent the full diversity of internet memes.  
+- Compared to the huge variety of meme formats online, this dataset is limited.  
+- The model is trained only with Spanish memes.
 
-### Validation Performance
-- **Accuracy:** ~78.82%  
-- **AUC:** ~84.97%  
+Defining what is “offensive” is not always clear and can depend on context or interpretation. Because of these limitations, the model should be seen as a **pre-filtering tool**, not a final decision system.
 
-These metrics show good discriminative ability, but must be interpreted considering dataset limitations.
+You can find the full dataset here: [Memes4Good Dataset on Hugging Face](https://huggingface.co/datasets/sebasyuste/MEMES4GOOD-DATA)
 
 ---
 
-## Why Real-World Performance Is Inconsistent
-Despite solid validation results, performance in real-world scenarios can be unstable. This is expected for this task.
+## Generalization and Real-World Performance
 
-### Main Reasons:
-1. **Cultural Context Drift**  
-   Memes evolve quickly. New formats and references appear faster than datasets can be updated.
+Validation results during training were reasonably good.
 
-2. **Irony and Ambiguity**  
-   Even humans often disagree on whether a meme is offensive.
+However, when testing with random memes from the internet, performance drops. The models struggle with new templates, different humor styles, and formats not seen during training.
 
-3. **False Positive vs. False Negative Trade-off**  
-   Higher sensitivity to hate speech increases the risk of false positives.
-
-4. **Data Quality Ceiling**  
-   No model can outperform noisy or inconsistent labels.
-
-For this reason, Memes4Good is intended as a **decision-support system**, not a fully autonomous moderation tool.
+This shows the gap between validation performance and real-world behavior.
 
 ---
 
-## Project Status
-Memes4Good v3 is an **academic and experimental research project** exploring multimodal reasoning for Spanish content moderation.
+## Limitations
 
-It highlights:
-- The necessity of multimodal approaches for meme understanding  
-- The effectiveness of late fusion for cross-modal reasoning  
-- Data quality and cultural context as the main remaining challenges  
+- **Dataset size:** 6,750 samples are not enough for large multimodal models.  
+- **Limited diversity:** Only three sources, and one Telegram group.  
+- **Subjectivity:** Humor, irony, and cultural context make meme classification difficult.  
+- **Real-world performance:** None of the models perform especially well outside the training data.
 
+With the current dataset, ROBUST and BALANCED behave more reliably. POWERFUL could benefit from much more and more diverse data.
+
+---
+
+## Notebooks
+
+- `MEMES4GOOD_PROJECT_sebasyuste-ROBUST.ipynb`  
+- `MEMES4GOOD_PROJECT_sebasyuste-BALANCED.ipynb`  
+- `MEMES4GOOD_PROJECT_sebasyuste-POWERFUL.ipynb`  
+- `MEMES4GOOD_DEMO_sebasyuste.ipynb` (interactive demo)
+
+The demo allows switching between the three model versions.
+
+---
+
+## Hugging Face Models
+
+All three models are available here:  
+[https://huggingface.co/sebasyuste/MEMES4GOOD-MODELS/tree/main](https://huggingface.co/sebasyuste/MEMES4GOOD-MODELS/tree/main)
+
+---
+
+## Final Note
+
+POWERFUL has the most flexible architecture and could improve with a much larger and more diverse dataset. For the current data scale, ROBUST and BALANCED offer more stable results.
+
+This project shows both the potential and current limitations of multimodal meme classification with limited data.
