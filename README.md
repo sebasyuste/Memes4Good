@@ -86,7 +86,15 @@ Important details:
 
 Defining what is “offensive” is not always clear and can depend on context or interpretation. Because of these limitations, the model should be seen as a **pre-filtering tool**, not a final decision system.
 
-You can find the full dataset here: [Memes4Good Dataset on Hugging Face](https://huggingface.co/datasets/sebasyuste/MEMES4GOOD-DATA)
+You can find the full dataset here: [Memes4Good Dataset on Hugging Face](https://huggingface.co/datasets/sebasyuste/MEMES4GOOD-DATA) <br><br>
+
+For detailed information regarding each sample, you can access the metadata CSV here: [Memes4Good Metadata CSV](https://github.com/sebasyuste/Memes4Good/blob/main/text_and_description_dataset.csv)
+
+The file contains the following key columns used for training and inference:
+* **meme_id**: Unique identifier corresponding to the meme image filename.
+* **extracted_text**: The literal text present in the meme image.
+* **description_es_new**: A Spanish semantic description of the visual scene and context.
+* **harmless**: The target label where 0 indicates harmful/offensive content and 1 indicates harmless content.
 
 ---
 
