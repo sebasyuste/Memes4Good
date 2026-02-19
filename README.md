@@ -121,9 +121,9 @@ With the current dataset, ROBUST and BALANCED behave more reliably. POWERFUL cou
 
 ## Notebooks
 
-- `MEMES4GOOD_PROJECT_sebasyuste-ROBUST.ipynb`  
-- `MEMES4GOOD_PROJECT_sebasyuste-BALANCED.ipynb`  
-- `MEMES4GOOD_PROJECT_sebasyuste-POWERFUL.ipynb`  
+- `Memes4Good_ROBUST_sebasyuste.ipynb`  
+- `Memes4Good_BALANCED_sebasyuste.ipynb`  
+- `Memes4Good_POWERFUL_sebasyuste.ipynb`  
 - `MEMES4GOOD_DEMO_sebasyuste.ipynb` (interactive demo)
 
 The demo allows switching between the three model versions.
